@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>RIKA AI</title>
+<style>
+body {
+    font-family: Arial;
+    background: #0f172a;
+    color: white;
+    text-align: center;
+}
+#chat {
+    width: 80%;
+    margin: auto;
+    height: 400px;
+    overflow-y: auto;
+    border: 1px solid gray;
+    padding: 10px;
+}
+button {
+    padding: 10px 20px;
+    margin: 10px;
+}
+</style>
+</head>
+<body>
+
+<h1>RIKA 💫</h1>
+
+<div id="chat"></div>
+
+<input id="textInput" placeholder="Type or use mic..." />
+<button onclick="sendMessage()">Send</button>
+<button onclick="startListening()">🎤 Speak</button>
+
+<script>
+const chatDiv = document.getElementById("chat");
+
+function addMessage(sender, text) {
+    chatDiv.innerHTML += "<p><b>" + sender + ":</b> " + text + "</p>";
+    chatDiv.scrollTop = chatDiv.scrollHeight;
+}
+
+async function sendMessage() {
+    const input = document.getElementById("textInput");
+    const message = input.value;
+    if (!message) return;
+
+    addMessage("You", message);
+    input.value = "";
+
+    const response = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: message })
+    });
+
+    const data = await response.json();
+    addMessage("RIKA", data.reply);
+    speak(data.reply);
+}
+
+function startListening() {
+    const recognition = new webkitSpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.start();
+
+    recognition.onresult = function(event) {
+        const text = event.results[0][0].transcript;
+        document.getElementById("textInput").value = text;
+        sendMessage();
+    };
+}
+
+// Young Female Voice (Browser Based)
+function speak(text) {
+    const speech = new SpeechSynthesisUtterance(text);
+    const voices = speechSynthesis.getVoices();
+
+    for (let voice of voices) {
+        if (voice.name.toLowerCase().includes("female") ||
+            voice.name.toLowerCase().includes("zira") ||
+            voice.name.toLowerCase().includes("samantha")) {
+            speech.voice = voice;
+            break;
+        }
+    }
+
+    speech.rate = 1;
+    speech.pitch = 1.2;
+    speech.volume = 1;
+
+    window.speechSynthesis.speak(speech);
+}
+</script>
+
+</body>
+</html>
